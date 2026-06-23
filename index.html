@@ -1,68 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Centro de Inteligencia Geopolítica</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: #111827; color: #e5e7eb; min-height: 100vh; }
-    header { background: #1f2937; border-bottom: 1px solid #374151; padding: 12px 16px; }
-    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    h1 { font-size: 15px; font-weight: 700; color: white; }
-    .subtitle { font-size: 11px; color: #6b7280; margin-top: 2px; }
-    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
-    button { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
-    .btn-gray { background: #374151; color: #d1d5db; }
-    .btn-blue { background: #2563eb; color: white; }
-    .btn-blue:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
-    .error-box { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; padding: 8px 12px; border-radius: 6px; font-size: 11px; margin-top: 8px; }
-    nav { background: #1f2937; border-bottom: 1px solid #374151; display: flex; overflow-x: auto; }
-    .nav-btn { padding: 10px 14px; font-size: 12px; color: #9ca3af; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; font-weight: 400; }
-    .nav-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; font-weight: 700; }
-    .badge { background: #374151; color: #9ca3af; border-radius: 9999px; padding: 0 5px; font-size: 10px; }
-    main { padding: 16px; max-width: 800px; margin: 0 auto; }
-    .card { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-    .card-blue { border-color: rgba(59,130,246,0.2); }
-    .score { padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .alert { padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-    .tag { background: #374151; color: #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 10px; display: inline-block; margin: 2px; }
-    .tag-blue { background: #1e3a5f; color: #93c5fd; }
-    .section-title { color: white; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
-    .empty { color: #6b7280; text-align: center; padding: 40px; }
-    .loading { text-align: center; padding: 60px 20px; }
-    .loading p { color: #9ca3af; font-size: 14px; margin-bottom: 6px; }
-    .loading small { color: #6b7280; font-size: 11px; }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-    .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; align-items: center; }
-    .card-title { color: white; font-weight: 600; font-size: 13px; line-height: 1.4; }
-    .toggle-btn { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; flex-shrink: 0; padding: 0; }
-    .card-body { margin-top: 10px; }
-    .card-resumen { color: #d1d5db; font-size: 12px; margin-bottom: 8px; }
-    .bullets { list-style: none; margin-bottom: 8px; }
-    .bullets li { color: #9ca3af; font-size: 12px; display: flex; gap: 6px; margin-bottom: 3px; }
-    .bullets li span { color: #60a5fa; }
-    .analisis-box { background: rgba(37,99,235,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; padding: 8px; margin-bottom: 8px; }
-    .analisis-label { color: #93c5fd; font-size: 11px; font-weight: 700; }
-    .analisis-text { color: #bfdbfe; font-size: 12px; }
-    .link { color: #60a5fa; font-size: 11px; text-decoration: none; }
-    .encuesta-opciones { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-    .encuesta-meta { color: #9ca3af; font-size: 11px; margin-bottom: 3px; }
-    .update-row { display: flex; gap: 8px; }
-    .update-icon { color: #60a5fa; flex-shrink: 0; }
-    .update-nombre { color: #93c5fd; font-size: 12px; font-weight: 600; }
-    .update-text { color: #d1d5db; font-size: 12px; }
-    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-    .label-red { color: #f87171; }
-    .label-blue { color: #60a5fa; margin-top: 10px; }
-    ol.secciones { margin: 0; padding: 0 0 0 16px; }
-    ol.secciones li { color: #9ca3af; font-size: 11px; margin-bottom: 2px; }
-    .diario-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-    .diario-count { color: #6b7280; font-size: 11px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,sans-serif;background:#111827;color:#e5e7eb;min-height:100vh}
+    header{background:#1f2937;border-bottom:1px solid #374151;padding:12px 16px}
+    .header-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    h1{font-size:15px;font-weight:700;color:white}
+    .subtitle{font-size:11px;color:#6b7280;margin-top:2px}
+    .btn-group{display:flex;gap:6px;flex-wrap:wrap}
+    button{border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
+    .btn-gray{background:#374151;color:#d1d5db}
+    .btn-blue{background:#2563eb;color:white}
+    .btn-red{background:#7f1d1d;color:#fca5a5;padding:4px 8px;font-size:10px;border-radius:4px}
+    .btn-blue:disabled{background:#374151;color:#6b7280;cursor:not-allowed}
+    .error-box{background:#450a0a;border:1px solid #7f1d1d;color:#fca5a5;padding:8px 12px;border-radius:6px;font-size:11px;margin-top:8px}
+    nav{background:#1f2937;border-bottom:1px solid #374151;display:flex;overflow-x:auto}
+    .nav-btn{padding:10px 14px;font-size:12px;color:#9ca3af;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:400}
+    .nav-btn.active{color:#60a5fa;border-bottom:2px solid #60a5fa;font-weight:700}
+    .badge{background:#374151;color:#9ca3af;border-radius:9999px;padding:0 5px;font-size:10px}
+    main{padding:16px;max-width:800px;margin:0 auto}
+    .card{background:#1f2937;border:1px solid #374151;border-radius:8px;padding:12px;margin-bottom:10px}
+    .card-blue{border-color:rgba(59,130,246,0.2)}
+    .score{padding:1px 8px;border-radius:4px;font-size:11px;font-weight:700}
+    .alert{padding:1px 8px;border-radius:4px;font-size:11px;font-weight:700}
+    .tag{background:#374151;color:#e5e7eb;padding:2px 8px;border-radius:4px;font-size:10px;display:inline-block;margin:2px}
+    .tag-blue{background:#1e3a5f;color:#93c5fd}
+    .tag-green{background:#14532d;color:#86efac}
+    .section-title{color:white;font-size:13px;font-weight:700;margin-bottom:10px}
+    .empty{color:#6b7280;text-align:center;padding:40px}
+    .card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;align-items:center}
+    .card-title{color:white;font-weight:600;font-size:13px;line-height:1.4}
+    .toggle-btn{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:16px;flex-shrink:0;padding:0}
+    .card-body{margin-top:10px}
+    .bullets{list-style:none;margin-bottom:8px}
+    .bullets li{color:#9ca3af;font-size:12px;display:flex;gap:6px;margin-bottom:3px}
+    .analisis-box{background:rgba(37,99,235,0.15);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:8px;margin-bottom:8px}
+    .link{color:#60a5fa;font-size:11px;text-decoration:none}
+    .hora-badge{background:#1e3a5f;color:#93c5fd;padding:1px 6px;border-radius:4px;font-size:10px}
+    .tracker-field{margin-bottom:6px}
+    .tracker-label{color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
+    .tracker-value{color:#d1d5db;font-size:12px;margin-top:1px}
+    .tracker-section{background:rgba(0,0,0,0.2);border-radius:6px;padding:8px;margin-top:8px}
+    .diario-header{display:flex;justify-content:space-between;margin-bottom:10px;align-items:center}
+    .section-label{font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:6px}
+    .label-red{color:#f87171}
+    .label-blue{color:#60a5fa;margin-top:10px}
   </style>
 </head>
 <body>
-
 <header>
   <div class="header-top">
     <div>
@@ -76,226 +66,231 @@
   </div>
   <div id="errorBox" style="display:none" class="error-box"></div>
 </header>
-
 <nav id="nav"></nav>
-
-<main id="main">
-  <div class="loading">
-    <p>⏳ Conectando con el servidor...</p>
-    <small>La primera carga puede tardar hasta 50 segundos</small>
-  </div>
-</main>
+<main id="main"><div style="text-align:center;padding:60px 20px"><p style="color:#9ca3af;font-size:14px">⏳ Conectando...</p></div></main>
 
 <script>
-  const BACKEND = "https://geopolitica-backend.onrender.com";
-  const SECTIONS = ["Diario","Encuestas","Tracker","Análisis del Mes","Biblioteca"];
-  const ICONS = ["📰","📊","🗺️","📈","📚"];
-  let activeSection = 0;
-  let data = {};
-  let countdown = 1800;
+const BACKEND = "https://geopolitica-backend.onrender.com";
+const SECTIONS = ["Diario","Encuestas","Tracker","Análisis del Mes","Biblioteca"];
+const ICONS = ["📰","📊","🗺️","📈","📚"];
+let activeSection = 0;
+let data = {};
+let countdown = 1800;
 
-  // Countdown
-  setInterval(() => {
-    countdown = countdown <= 1 ? 1800 : countdown - 1;
+setInterval(()=>{ countdown = countdown<=1?1800:countdown-1; updateSubtitle(); },1000);
+function fmtCD(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+function fmtHoras(ts){
+  const h = Math.floor((Date.now()-ts)/3600000);
+  const m = Math.floor(((Date.now()-ts)%3600000)/60000);
+  return h>0 ? `hace ${h}h ${m}m` : `hace ${m}m`;
+}
+function updateSubtitle(){
+  const lu = data.lastUpdate ? new Date(data.lastUpdate).toLocaleTimeString('es-ES') : null;
+  document.getElementById('subtitle').textContent =
+    `🟢 Servidor activo${lu?' · Datos de: '+lu:''} · Próxima: ${fmtCD(countdown)}`;
+}
+function showError(msg){
+  const el=document.getElementById('errorBox');
+  el.style.display=msg?'block':'none';
+  el.textContent=msg?'⚠️ '+msg:'';
+}
+
+async function fetchDatos(){
+  showError('');
+  try{
+    const res = await fetch(BACKEND+'/api/datos');
+    if(!res.ok) throw new Error('Error '+res.status);
+    data = await res.json();
+    countdown=1800;
     updateSubtitle();
-  }, 1000);
+    renderNav();
+    renderSection();
+  }catch(e){ showError('No se pudo conectar: '+e.message); }
+}
 
-  function fmtCD(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+async function forzarAnalisis(){
+  const btn=document.getElementById('btnForzar');
+  btn.disabled=true; btn.textContent='⏳ Analizando...';
+  try{
+    await fetch(BACKEND+'/api/actualizar',{method:'POST'});
+    setTimeout(()=>{ fetchDatos(); btn.disabled=false; btn.textContent='⚡ Forzar análisis'; },4000);
+  }catch(e){ showError('Error al forzar'); btn.disabled=false; btn.textContent='⚡ Forzar análisis'; }
+}
 
-  function updateSubtitle() {
-    const lu = data.lastUpdate ? new Date(data.lastUpdate).toLocaleTimeString('es-ES') : null;
-    document.getElementById('subtitle').textContent =
-      `🟢 Servidor activo${lu ? ' · Datos de: ' + lu : ''} · Próxima: ${fmtCD(countdown)}`;
-  }
+async function eliminarNoticia(id){
+  try{
+    await fetch(BACKEND+'/api/noticias/'+encodeURIComponent(id),{method:'DELETE'});
+    data.noticias = (data.noticias||[]).filter(n=>n.id!==id);
+    renderSection();
+  }catch(e){ showError('Error al eliminar noticia'); }
+}
 
-  function showError(msg) {
-    const el = document.getElementById('errorBox');
-    el.style.display = msg ? 'block' : 'none';
-    el.textContent = msg ? '⚠️ ' + msg : '';
-  }
+async function eliminarConflicto(nombre){
+  try{
+    await fetch(BACKEND+'/api/tracker/'+encodeURIComponent(nombre),{method:'DELETE'});
+    if(data.tracker && data.tracker.conflictos)
+      data.tracker.conflictos = data.tracker.conflictos.filter(c=>c.nombre!==nombre);
+    renderSection();
+  }catch(e){ showError('Error al eliminar conflicto'); }
+}
 
-  async function fetchDatos() {
-    showError('');
-    try {
-      const res = await fetch(BACKEND + '/api/datos');
-      if (!res.ok) throw new Error('Error ' + res.status);
-      data = await res.json();
-      countdown = 1800;
-      updateSubtitle();
-      renderNav();
-      renderSection();
-    } catch(e) {
-      showError('No se pudo conectar: ' + e.message);
-      document.getElementById('subtitle').textContent = '🔴 Servidor sin conexión';
-    }
-  }
+function counts(){
+  const n=data.noticias||[];
+  const e=data.encuestas||[];
+  const t=data.tracker||{};
+  const a=data.analisis||[];
+  const b=data.biblioteca||[];
+  return[n.length,e.length,(t.conflictos||[]).length,a.length,b.length];
+}
 
-  async function forzarAnalisis() {
-    document.getElementById('btnForzar').disabled = true;
-    document.getElementById('btnForzar').textContent = '⏳ Analizando...';
-    try {
-      await fetch(BACKEND + '/api/actualizar', { method: 'POST' });
-      setTimeout(() => {
-        fetchDatos();
-        document.getElementById('btnForzar').disabled = false;
-        document.getElementById('btnForzar').textContent = '⚡ Forzar análisis';
-      }, 4000);
-    } catch(e) {
-      showError('No se pudo forzar la actualización');
-      document.getElementById('btnForzar').disabled = false;
-      document.getElementById('btnForzar').textContent = '⚡ Forzar análisis';
-    }
-  }
+function renderNav(){
+  const c=counts();
+  document.getElementById('nav').innerHTML=SECTIONS.map((s,i)=>`
+    <button class="nav-btn ${i===activeSection?'active':''}" onclick="setSection(${i})">
+      ${ICONS[i]} ${s} ${c[i]>0?`<span class="badge">${c[i]}</span>`:''}
+    </button>`).join('');
+}
+function setSection(i){ activeSection=i; renderNav(); renderSection(); }
 
-  function counts() {
-    const n = data.noticias || [];
-    const e = data.encuestas || [];
-    const t = data.tracker || {};
-    const a = data.analisis || [];
-    const b = data.biblioteca || [];
-    return [
-      n.length, e.length,
-      (t.nuevos_conflictos||[]).length + (t.actualizaciones||[]).length,
-      a.length, b.length
-    ];
-  }
+function scoreStyle(s){
+  const bg=s>=9?'#7f1d1d':s>=7?'#7c2d12':'#713f12';
+  const col=s>=9?'#fca5a5':s>=7?'#fdba74':'#fde047';
+  return `background:${bg};color:${col}`;
+}
+function alertStyle(l){
+  const m={alto:['#7f1d1d','#fca5a5','ALTO'],medio:['#7c2d12','#fdba74','MEDIO'],bajo:['#713f12','#fde047','BAJO']};
+  const[bg,col,lbl]=m[l]||['#374151','#9ca3af','?'];
+  return `<span class="alert" style="background:${bg};color:${col}">${lbl}</span>`;
+}
 
-  function renderNav() {
-    const c = counts();
-    document.getElementById('nav').innerHTML = SECTIONS.map((s,i) => `
-      <button class="nav-btn ${i===activeSection?'active':''}" onclick="setSection(${i})">
-        ${ICONS[i]} ${s} ${c[i]>0?`<span class="badge">${c[i]}</span>`:''}
-      </button>`).join('');
-  }
+function renderSection(){
+  const el=document.getElementById('main');
+  if(activeSection===0) el.innerHTML=renderDiario();
+  else if(activeSection===1) el.innerHTML=renderEncuestas();
+  else if(activeSection===2) el.innerHTML=renderTracker();
+  else if(activeSection===3) el.innerHTML=renderAnalisis();
+  else if(activeSection===4) el.innerHTML=renderBiblioteca();
+}
 
-  function setSection(i) { activeSection = i; renderNav(); renderSection(); }
-
-  function scoreStyle(s) {
-    const bg = s>=9?'#7f1d1d':s>=7?'#7c2d12':'#713f12';
-    const col = s>=9?'#fca5a5':s>=7?'#fdba74':'#fde047';
-    return `background:${bg};color:${col}`;
-  }
-
-  function alertStyle(l) {
-    const m = {alto:['#7f1d1d','#fca5a5','ALTO'],medio:['#7c2d12','#fdba74','MEDIO'],bajo:['#713f12','#fde047','BAJO']};
-    const [bg,col,lbl] = m[l]||['#374151','#9ca3af','?'];
-    return `<span class="alert" style="background:${bg};color:${col}">${lbl}</span>`;
-  }
-
-  function renderSection() {
-    const el = document.getElementById('main');
-    if (activeSection === 0) el.innerHTML = renderDiario();
-    else if (activeSection === 1) el.innerHTML = renderEncuestas();
-    else if (activeSection === 2) el.innerHTML = renderTracker();
-    else if (activeSection === 3) el.innerHTML = renderAnalisis();
-    else if (activeSection === 4) el.innerHTML = renderBiblioteca();
-  }
-
-  function renderDiario() {
-    const noticias = [...(data.noticias||[])].sort((a,b)=>b.puntuacion-a.puntuacion);
-    if (!noticias.length) return '<p class="empty">Sin noticias aún. Pulsa Forzar análisis.</p>';
-    return `
-      <div class="diario-header">
-        <p class="section-title">📰 Noticias del Día</p>
-        <span class="diario-count">${noticias.length} noticias · ≥ 6/10</span>
-      </div>
-      ${noticias.map((n,i) => `
-        <div class="card">
-          <div class="card-header">
-            <div style="flex:1">
-              <div class="card-meta">
-                <span class="score" style="${scoreStyle(n.puntuacion)}">${n.puntuacion}/10</span>
-                <span style="font-size:11px;color:#9ca3af">${n.region||''}</span>
-                <span style="font-size:11px;color:#60a5fa">${n.medio||''}</span>
-              </div>
-              <p class="card-title">${n.titular||''}</p>
+function renderDiario(){
+  const noticias=[...(data.noticias||[])].sort((a,b)=>b.puntuacion-a.puntuacion);
+  if(!noticias.length) return '<p class="empty">Sin noticias aún. Pulsa Forzar análisis.</p>';
+  return `
+    <div class="diario-header">
+      <p class="section-title">📰 Noticias del Día</p>
+      <span style="color:#6b7280;font-size:11px">${noticias.length} noticias · últimas 24h</span>
+    </div>
+    ${noticias.map((n,i)=>`
+      <div class="card" id="card-wrap-${i}">
+        <div class="card-header">
+          <div style="flex:1">
+            <div class="card-meta">
+              <span class="score" style="${scoreStyle(n.puntuacion)}">${n.puntuacion}/10</span>
+              <span style="font-size:11px;color:#9ca3af">${n.region||''}</span>
+              <span style="font-size:11px;color:#60a5fa">${n.medio||''}</span>
+              ${n.timestamp?`<span class="hora-badge">⏱ ${fmtHoras(n.timestamp)}</span>`:''}
             </div>
-            <button class="toggle-btn" onclick="toggleCard('card-${i}')">▼</button>
+            <p class="card-title">${n.titular||''}</p>
           </div>
-          <div id="card-${i}" style="display:none" class="card-body">
-            <p class="card-resumen">${n.resumen||''}</p>
-            <ul class="bullets">${(n.bullets||[]).map(b=>`<li><span>•</span>${b}</li>`).join('')}</ul>
-            <div class="analisis-box">
-              <span class="analisis-label">🧠 Análisis: </span>
-              <span class="analisis-text">${n.analisis||''}</span>
-            </div>
-            <a class="link" href="${n.link||'#'}" target="_blank">🔗 Ver en ${n.medio||'fuente'} →</a>
+          <div style="display:flex;gap:6px;align-items:flex-start;flex-shrink:0">
+            <button class="btn-red" onclick="eliminarNoticia('${n.id}')">✓ Publicada</button>
+            <button class="toggle-btn" onclick="toggleCard('cbody-${i}', this)">▼</button>
           </div>
-        </div>`).join('')}`;
-  }
+        </div>
+        <div id="cbody-${i}" style="display:none" class="card-body">
+          <p style="color:#d1d5db;font-size:12px;margin-bottom:8px">${n.resumen||''}</p>
+          <ul class="bullets">${(n.bullets||[]).map(b=>`<li><span style="color:#60a5fa">•</span>${b}</li>`).join('')}</ul>
+          <div class="analisis-box">
+            <span style="color:#93c5fd;font-size:11px;font-weight:700">🧠 Análisis: </span>
+            <span style="color:#bfdbfe;font-size:12px">${n.analisis||''}</span>
+          </div>
+          <a class="link" href="${n.link||'#'}" target="_blank">🔗 Ver en ${n.medio||'fuente'} →</a>
+        </div>
+      </div>`).join('')}`;
+}
 
-  function toggleCard(id) {
-    const el = document.getElementById(id);
-    const btn = el.previousElementSibling.querySelector('.toggle-btn');
-    if (el.style.display === 'none') { el.style.display = 'block'; btn.textContent = '▲'; }
-    else { el.style.display = 'none'; btn.textContent = '▼'; }
-  }
+function toggleCard(id, btn){
+  const el=document.getElementById(id);
+  if(el.style.display==='none'){ el.style.display='block'; btn.textContent='▲'; }
+  else{ el.style.display='none'; btn.textContent='▼'; }
+}
 
-  function renderEncuestas() {
-    const enc = data.encuestas || [];
-    if (!enc.length) return '<p class="empty">Sin encuestas aún.</p>';
-    return `<p class="section-title">📊 Propuestas de Encuestas</p>` +
-      enc.map(e => `
-        <div class="card">
-          <p class="card-title" style="margin-bottom:8px">📊 ${e.titulo||''}</p>
-          <div class="encuesta-opciones">${(e.opciones||[]).map(op=>`<span class="tag">${op}</span>`).join('')}</div>
-          <p class="encuesta-meta"><span style="color:#6b7280">Motivo:</span> ${e.motivo||''}</p>
-          <p class="encuesta-meta"><span style="color:#4b5563">Basada en:</span> ${e.basada_en||''}</p>
-        </div>`).join('');
-  }
+function renderEncuestas(){
+  const enc=data.encuestas||[];
+  if(!enc.length) return '<p class="empty">Sin encuestas aún.</p>';
+  return `<p class="section-title">📊 Propuestas de Encuestas</p>`+
+    enc.map(e=>`<div class="card">
+      <p class="card-title" style="margin-bottom:8px">📊 ${e.titulo||''}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${(e.opciones||[]).map(op=>`<span class="tag">${op}</span>`).join('')}</div>
+      <p style="color:#9ca3af;font-size:11px;margin-bottom:3px"><span style="color:#6b7280">Motivo:</span> ${e.motivo||''}</p>
+      <p style="color:#6b7280;font-size:11px"><span style="color:#4b5563">Basada en:</span> ${e.basada_en||''}</p>
+    </div>`).join('');
+}
 
-  function renderTracker() {
-    const t = data.tracker || {};
-    const nc = t.nuevos_conflictos || [];
-    const ac = t.actualizaciones || [];
-    if (!nc.length && !ac.length) return '<p class="empty">Sin datos de tracker aún.</p>';
-    return `<p class="section-title">🗺️ Tracker de Conflictos</p>` +
-      (nc.length ? `<p class="section-label label-red">⚠️ Nuevas tensiones</p>` +
-        nc.map(c => `<div class="card">
-          <div class="card-meta">${alertStyle(c.nivel_alerta)}<span style="font-size:11px;color:#9ca3af">${c.region||''}</span></div>
+function renderTracker(){
+  const conflictos=(data.tracker&&data.tracker.conflictos)||[];
+  if(!conflictos.length) return '<p class="empty">Sin conflictos en seguimiento aún.</p>';
+  const porAlerta = (nivel) => conflictos.filter(c=>c.nivel_alerta===nivel);
+  const renderConflicto = (c) => `
+    <div class="card">
+      <div class="card-header">
+        <div style="flex:1">
+          <div class="card-meta">
+            ${alertStyle(c.nivel_alerta)}
+            ${c.ubicacion?`<span class="tag">📍 ${c.ubicacion}</span>`:''}
+          </div>
           <p class="card-title">${c.nombre||''}</p>
-          <p style="color:#9ca3af;font-size:12px;margin-top:4px">${c.descripcion||''}</p>
-        </div>`).join('') : '') +
-      (ac.length ? `<p class="section-label label-blue">↻ Actualizaciones</p>` +
-        ac.map(u => `<div class="card card-blue">
-          <div class="update-row">
-            <span class="update-icon">↻</span>
-            <div><span class="update-nombre">${u.conflicto||''}: </span><span class="update-text">${u.update||''}</span></div>
-          </div>
-        </div>`).join('') : '');
-  }
+          ${c.partes?`<p style="color:#60a5fa;font-size:11px;margin-top:3px">⚔️ ${c.partes}</p>`:''}
+        </div>
+        <button class="btn-red" onclick="eliminarConflicto('${(c.nombre||'').replace(/'/g,"\\'")}')">✕ Quitar</button>
+      </div>
+      ${c.resumen||c.descripcion?`
+      <div class="tracker-section">
+        <p class="tracker-label">Resumen del conflicto</p>
+        <p class="tracker-value">${c.resumen||c.descripcion||''}</p>
+      </div>`:''}
+      ${c.ultimos_acontecimientos||c.update?`
+      <div class="tracker-section" style="background:rgba(37,99,235,0.1);border:1px solid rgba(59,130,246,0.2)">
+        <p class="tracker-label" style="color:#60a5fa">↻ Últimos acontecimientos</p>
+        <p class="tracker-value">${c.ultimos_acontecimientos||c.update||''}</p>
+      </div>`:''}
+    </div>`;
 
-  function renderAnalisis() {
-    const ana = data.analisis || [];
-    if (!ana.length) return '<p class="empty">Sin sugerencias aún.</p>';
-    return `<p class="section-title">📈 Análisis del Mes</p>` +
-      ana.map(a => `<div class="card">
-        <p class="card-title">${a.titulo||''}</p>
-        <p style="color:#9ca3af;font-size:11px;margin-bottom:6px">${a.subtitulo||''}</p>
-        <p style="color:#d1d5db;font-size:12px;margin-bottom:6px">${a.descripcion||''}</p>
-        <div style="margin-bottom:6px">${(a.zonas||[]).map(z=>`<span class="tag">${z}</span>`).join('')}</div>
-        <ol class="secciones">${(a.secciones_sugeridas||[]).map(s=>`<li>${s}</li>`).join('')}</ol>
-      </div>`).join('');
-  }
+  const alto=porAlerta('alto'), medio=porAlerta('medio'), bajo=porAlerta('bajo');
+  return `<p class="section-title">🗺️ Tracker de Conflictos <span style="color:#6b7280;font-size:11px;font-weight:400">${conflictos.length} activos</span></p>`+
+    (alto.length?`<p class="section-label label-red" style="margin-bottom:6px">🔴 Alerta Alta</p>${alto.map(renderConflicto).join('')}`:'') +
+    (medio.length?`<p class="section-label" style="color:#fdba74;margin-bottom:6px;margin-top:${alto.length?'10px':'0'}">🟠 Alerta Media</p>${medio.map(renderConflicto).join('')}`:'') +
+    (bajo.length?`<p class="section-label" style="color:#fde047;margin-bottom:6px;margin-top:${(alto.length||medio.length)?'10px':'0'}">🟡 Alerta Baja</p>${bajo.map(renderConflicto).join('')}`:'');
+}
 
-  function renderBiblioteca() {
-    const bib = data.biblioteca || [];
-    if (!bib.length) return '<p class="empty">Sin sugerencias aún.</p>';
-    return `<p class="section-title">📚 Biblioteca</p>` +
-      bib.map(b => `<div class="card">
-        <span class="tag tag-blue">${b.zona||''}</span>
-        <p class="card-title" style="margin:6px 0 2px">${b.titulo||''}</p>
-        <p style="color:#d1d5db;font-size:12px;margin-bottom:4px">${b.descripcion||''}</p>
-        <p style="color:#6b7280;font-size:11px;margin-bottom:6px"><span style="color:#4b5563">Por qué ahora:</span> ${b.motivo||''}</p>
-        <div>${(b.subtemas||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
-      </div>`).join('');
-  }
+function renderAnalisis(){
+  const ana=data.analisis||[];
+  if(!ana.length) return '<p class="empty">Sin sugerencias aún.</p>';
+  return `<p class="section-title">📈 Análisis del Mes</p>`+
+    ana.map(a=>`<div class="card">
+      <p class="card-title">${a.titulo||''}</p>
+      <p style="color:#9ca3af;font-size:11px;margin-bottom:6px">${a.subtitulo||''}</p>
+      <p style="color:#d1d5db;font-size:12px;margin-bottom:6px">${a.descripcion||''}</p>
+      <div style="margin-bottom:6px">${(a.zonas||[]).map(z=>`<span class="tag">${z}</span>`).join('')}</div>
+      <ol style="margin:0;padding:0 0 0 16px">${(a.secciones_sugeridas||[]).map(s=>`<li style="color:#9ca3af;font-size:11px;margin-bottom:2px">${s}</li>`).join('')}</ol>
+    </div>`).join('');
+}
 
-  // Auto-refresh cada 30 min
-  setInterval(fetchDatos, 1800000);
+function renderBiblioteca(){
+  const bib=data.biblioteca||[];
+  if(!bib.length) return '<p class="empty">Sin sugerencias aún.</p>';
+  return `<p class="section-title">📚 Biblioteca</p>`+
+    bib.map(b=>`<div class="card">
+      <span class="tag tag-blue">${b.zona||''}</span>
+      <p class="card-title" style="margin:6px 0 2px">${b.titulo||''}</p>
+      <p style="color:#d1d5db;font-size:12px;margin-bottom:4px">${b.descripcion||''}</p>
+      <p style="color:#6b7280;font-size:11px;margin-bottom:6px"><span style="color:#4b5563">Por qué ahora:</span> ${b.motivo||''}</p>
+      <div>${(b.subtemas||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+    </div>`).join('');
+}
 
-  // Arrancar
-  fetchDatos();
+setInterval(fetchDatos, 1800000);
+fetchDatos();
 </script>
 </body>
 </html>
