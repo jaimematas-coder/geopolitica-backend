@@ -203,6 +203,100 @@ async function analizarNoticias(titulares) {
   };
 }
 
+// ── Integración Base44 ────────────────────────────────────────────────────────
+const BASE44_APP_ID = "6a35db462179dc4b254ff6fb";
+const BASE44_API = "https://api.base44.com/api/apps";
+
+async function base44Request(method, endpoint, body) {
+  const res = await fetch(`${BASE44_API}/${BASE44_APP_ID}/${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": process.env.BASE44_API_KEY,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Base44 error ${res.status}: ${err}`);
+  }
+  return res.json();
+}
+
+async function sincronizarBase44(noticias, tracker) {
+  console.log("📤 Sincronizando con Base44...");
+  const hoy = new Date().toISOString().split("T")[0];
+
+  // 1. Obtener noticias ya publicadas hoy para evitar duplicados
+  const existentes = await base44Request("GET", `entities/Noticia?filters={"fecha":"${hoy}"}&limit=50`);
+  const titularesExistentes = new Set((existentes || []).map(n => n.titular?.toLowerCase().slice(0, 40)));
+
+  // 2. Publicar noticias nuevas (solo puntuación >= 8)
+  let publicadas = 0;
+  for (const n of noticias) {
+    const key = (n.titular || "").toLowerCase().slice(0, 40);
+    if (titularesExistentes.has(key)) continue;
+    if ((n.puntuacion || 0) < 8) continue; // Solo las más importantes
+    try {
+      await base44Request("POST", "entities/Noticia", {
+        fecha: hoy,
+        titular: n.titular || "",
+        resumen: n.resumen || "",
+        bullets: n.bullets || [],
+        criterio: n.analisis || "",
+        estado: "publicado",
+      });
+      titularesExistentes.add(key);
+      publicadas++;
+    } catch (e) {
+      console.warn(`Error publicando noticia en Base44: ${e.message}`);
+    }
+  }
+  console.log(`✅ Base44: ${publicadas} noticias nuevas publicadas`);
+
+  // 3. Sincronizar conflictos del tracker
+  const conflictos = (tracker && tracker.conflictos) || [];
+  const existentesConflictos = await base44Request("GET", "entities/Conflicto?limit=100");
+  const nombresExistentes = new Map((existentesConflictos || []).map(c => [c.nombre?.toLowerCase(), c.id]));
+
+  let conflictosActualizados = 0;
+  for (const c of conflictos) {
+    const key = (c.nombre || "").toLowerCase();
+    const nivelMap = { alto: "Alto", medio: "Medio", bajo: "Bajo" };
+    const nivel = nivelMap[c.nivel_alerta] || "Medio";
+    try {
+      if (nombresExistentes.has(key)) {
+        // Actualizar existente
+        const id = nombresExistentes.get(key);
+        await base44Request("PUT", `entities/Conflicto/${id}`, {
+          ubicacion: c.ubicacion || "",
+          partes: c.partes || "",
+          nivel_tension: nivel,
+          resumen_semana: c.ultimos_acontecimientos || c.update || "",
+          estado: "activo",
+          actualizado_en: new Date().toISOString(),
+        });
+      } else {
+        // Crear nuevo
+        await base44Request("POST", "entities/Conflicto", {
+          nombre: c.nombre || "",
+          ubicacion: c.ubicacion || "",
+          partes: c.partes || "",
+          nivel_tension: nivel,
+          resumen_semana: c.ultimos_acontecimientos || c.descripcion || "",
+          estado: "activo",
+          actualizado_en: new Date().toISOString(),
+        });
+        nombresExistentes.set(key, "new");
+      }
+      conflictosActualizados++;
+    } catch (e) {
+      console.warn(`Error sincronizando conflicto ${c.nombre}: ${e.message}`);
+    }
+  }
+  console.log(`✅ Base44: ${conflictosActualizados} conflictos sincronizados`);
+}
+
 // ── Cache en memoria ──────────────────────────────────────────────────────────
 let cache = { noticias: [], encuestas: [], tracker: { conflictos: [] }, analisis: [], biblioteca: [], lastUpdate: null };
 
@@ -213,6 +307,10 @@ async function cicloActualizacion() {
     console.log(`📰 ${titulares.length} titulares recogidos`);
     cache = await analizarNoticias(titulares);
     console.log(`✅ Actualización completada`);
+    // Sincronizar con Base44 si hay API key
+    if (process.env.BASE44_API_KEY) {
+      await sincronizarBase44(cache.noticias, cache.tracker);
+    }
   } catch (e) { console.error("❌ Error en ciclo:", e.message); }
 }
 
