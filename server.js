@@ -6,22 +6,51 @@ const fetch = require("node-fetch");
 const app = express();
 const parser = new RSSParser();
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use(cors());
 app.use(express.json());
 
 // ── Fuentes RSS ───────────────────────────────────────────────────────────────
 const RSS_FEEDS = [
-  { name: "BBC World",            url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
-  { name: "Reuters",              url: "https://feeds.reuters.com/reuters/worldNews" },
-  { name: "Al Jazeera",           url: "https://www.aljazeera.com/xml/rss/all.xml" },
-  { name: "France 24",            url: "https://www.france24.com/es/rss" },
-  { name: "DW España",            url: "https://rss.dw.com/rss/es-all" },
-  { name: "El País Internacional", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada" },
-  { name: "The Guardian World",   url: "https://www.theguardian.com/world/rss" },
+  // Occidente - Generalistas
+  { name: "BBC World",              url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
+  { name: "Reuters World",          url: "https://feeds.reuters.com/reuters/worldNews" },
+  { name: "The Guardian World",     url: "https://www.theguardian.com/world/rss" },
+  { name: "Le Monde International", url: "https://www.lemonde.fr/international/rss_full.xml" },
+  { name: "Der Spiegel",            url: "https://www.spiegel.de/international/index.rss" },
+  { name: "El País Internacional",  url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada" },
+  { name: "France 24",              url: "https://www.france24.com/es/rss" },
+  { name: "DW World",               url: "https://rss.dw.com/rss/en-all" },
+  { name: "AP News",                url: "https://feeds.apnews.com/rss/apf-intlnews" },
+  { name: "AFP",                    url: "https://www.afp.com/en/rss.xml" },
+
+  // Think tanks y análisis
+  { name: "Foreign Affairs",        url: "https://www.foreignaffairs.com/rss.xml" },
+  { name: "Foreign Policy",         url: "https://foreignpolicy.com/feed/" },
+  { name: "The Diplomat",           url: "https://thediplomat.com/feed/" },
+  { name: "War on the Rocks",       url: "https://warontherocks.com/feed/" },
+  { name: "Bellingcat",             url: "https://www.bellingcat.com/feed/" },
+  { name: "Crisis Group",           url: "https://www.crisisgroup.org/rss.xml" },
+  { name: "Council on Foreign Relations", url: "https://www.cfr.org/rss/feeds/publication_types/expert_brief" },
+
+  // Perspectiva no occidental
+  { name: "Al Jazeera",             url: "https://www.aljazeera.com/xml/rss/all.xml" },
+  { name: "South China Morning Post", url: "https://www.scmp.com/rss/91/feed" },
+  { name: "Middle East Eye",        url: "https://www.middleeasteye.net/rss" },
+  { name: "Daily Sabah",            url: "https://www.dailysabah.com/rssFeed/push_notifications" },
+
+  // India y Asia del Sur
+  { name: "The Hindu",              url: "https://www.thehindu.com/news/international/?service=rss" },
+  { name: "The Wire",               url: "https://thewire.in/feed" },
+  { name: "Indian Express World",   url: "https://indianexpress.com/section/world/feed/" },
+
+  // África y América Latina
+  { name: "African Arguments",      url: "https://africanarguments.org/feed/" },
+  { name: "NACLA (América Latina)", url: "https://nacla.org/rss.xml" },
+  { name: "Agencia EFE",            url: "https://www.efe.com/efe/espana/mundo/rss/16" },
+
+  // Asia-Pacífico y otros
+  { name: "Nikkei Asia",            url: "https://asia.nikkei.com/rss/feed/nar" },
+  { name: "Asia Times",             url: "https://asiatimes.com/feed/" },
 ];
 
 // ── Cache en memoria ───────────────────────────────────────────────────────────
@@ -97,8 +126,8 @@ async function analizarNoticias(titulares) {
 
   // 1. Noticias
   const noticiasData = await callClaude(
-    "Eres analista geopolítico experto. Responde ÚNICAMENTE con JSON válido y completo. Sin texto extra ni markdown.",
-    `Fecha: ${fecha}.\nTitulares recogidos por RSS:\n${resumen}\n\nSelecciona las 5 más relevantes geopolíticamente y devuelve:\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve","resumen":"1-2 frases","bullets":["punto1","punto2","punto3"],"analisis":"Análisis propio","medio":"BBC","link":"https://...","region":"Europa"}]}`
+    "Eres analista geopolítico senior con 15 años de experiencia. Responde ÚNICAMENTE con JSON válido y completo. Sin texto extra ni markdown.",
+    `Fecha: ${fecha}.\nTitulares recogidos por RSS:\n${resumen}\n\nSelecciona las 5 más relevantes geopolíticamente y devuelve:\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve y directo","resumen":"1-2 frases concisas","bullets":["Frase corta. Máximo 10 palabras.","Frase corta. Máximo 10 palabras.","Frase corta. Máximo 10 palabras."],"analisis":"Análisis profundo con criterio propio: una frase larga y densa o dos frases cortas que aporten perspectiva real, no descripción. Debe revelar implicaciones, contexto histórico o consecuencias no evidentes.","medio":"BBC","link":"https://...","region":"Europa"}]}`
   );
   const noticias = (noticiasData.noticias || []).filter(n => n.puntuacion >= 6);
 
@@ -148,7 +177,7 @@ async function cicloActualizacion() {
 }
 
 cicloActualizacion(); // Al arrancar
-setInterval(cicloActualizacion, 30 * 60 * 1000); // Cada 10 min
+setInterval(cicloActualizacion, 30 * 60 * 1000); // Cada 30 min
 
 // ── Endpoints ─────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.json({ status: "ok", lastUpdate: cache.lastUpdate }));
@@ -159,4 +188,5 @@ app.post("/api/actualizar", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🌍 Servidor corriendo en puerto ${PORT}`));
 app.listen(PORT, () => console.log(`🌍 Servidor corriendo en puerto ${PORT}`));
