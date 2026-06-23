@@ -188,5 +188,10 @@ app.post("/api/actualizar", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌍 Servidor corriendo en puerto ${PORT}`));
-app.listen(PORT, () => console.log(`🌍 Servidor corriendo en puerto ${PORT}`));
+const server = app.listen(PORT, () => console.log(`🌍 Servidor corriendo en puerto ${PORT}`));
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Puerto ${PORT} ocupado, reintentando en 5s...`);
+    setTimeout(() => server.listen(PORT), 5000);
+  }
+});
