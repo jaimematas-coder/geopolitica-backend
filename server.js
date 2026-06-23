@@ -114,10 +114,11 @@ async function recogerNoticias() {
 
 // ── Base44 ────────────────────────────────────────────────────────────────────
 const BASE44_APP_ID = "6a35db462179dc4b254ff6fb";
-const BASE44_API = "https://api.base44.com/api/apps";
+const BASE44_API = "https://app.base44.com/api/apps";
 
 async function base44Request(method, endpoint, body) {
-  const res = await fetch(`${BASE44_API}/${BASE44_APP_ID}/${endpoint}`, {
+  const url = `${BASE44_API}/${BASE44_APP_ID}/${endpoint}`;
+  const res = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -127,7 +128,7 @@ async function base44Request(method, endpoint, body) {
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Base44 error ${res.status}: ${err}`);
+    throw new Error(`Base44 error ${res.status}: ${err.slice(0, 200)}`);
   }
   return res.json();
 }
@@ -138,7 +139,7 @@ async function sincronizarBase44(noticias, tracker) {
 
   // 1. Noticias con puntuación >= 8
   try {
-    const existentes = await base44Request("GET", `entities/Noticia?filters={"fecha":"${hoy}"}&limit=50`);
+    const existentes = await base44Request("GET", `entities/Noticia?limit=50&filters=${encodeURIComponent(JSON.stringify({fecha: hoy}))}`);
     const titularesExistentes = new Set((existentes || []).map(n => n.titular?.toLowerCase().slice(0, 40)));
     let publicadas = 0;
     for (const n of noticias) {
