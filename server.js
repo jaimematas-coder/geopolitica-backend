@@ -209,7 +209,7 @@ async function analizarNoticias(titulares) {
   console.log("🧠 Llamando a Claude para análisis de noticias...");
   const noticiasData = await callClaude(
     "Eres analista geopolítico senior con 15 años de experiencia. Responde ÚNICAMENTE con JSON válido y completo.",
-    `Fecha: ${fecha}.\nTitulares:\n${resumen}\n\nSelecciona las 5 más relevantes geopolíticamente:\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve y directo","resumen":"1-2 frases concisas","bullets":["Frase corta máx 10 palabras","Frase corta máx 10 palabras","Frase corta máx 10 palabras"],"analisis":"Una frase larga y densa o dos cortas con perspectiva real: implicaciones, contexto histórico o consecuencias no evidentes. No describir, analizar.","medio":"BBC","link":"https://...","region":"Europa"}]}`
+    `Fecha: ${fecha}.\nTitulares:\n${resumen}\n\nAnaliza estos titulares y selecciona las 5 noticias más relevantes geopolíticamente. IMPORTANTE: si varios titulares tratan el mismo acontecimiento aunque vengan de distintos medios, cuéntalos como UNA SOLA noticia y usa el medio más relevante. No repitas temas.\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve y directo","resumen":"1-2 frases concisas","bullets":["Frase corta máx 10 palabras","Frase corta máx 10 palabras","Frase corta máx 10 palabras"],"analisis":"Una frase larga y densa o dos cortas con perspectiva real: implicaciones, contexto histórico o consecuencias no evidentes. No describir, analizar.","medio":"BBC","link":"https://...","region":"Europa"}]}`
   );
 
   const noticiasArr = (noticiasData.noticias || []).filter(n => n.puntuacion >= 6);
