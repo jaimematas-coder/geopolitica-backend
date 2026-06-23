@@ -297,7 +297,14 @@ async function analizarNoticias(titulares) {
 // ── Cache ─────────────────────────────────────────────────────────────────────
 let cache = { noticias: [], encuestas: [], tracker: { conflictos: [] }, analisis: [], biblioteca: [], lastUpdate: null };
 
+let cicloCorriendo = false;
+
 async function cicloActualizacion() {
+  if (cicloCorriendo) {
+    console.log("⏸ Ciclo ya en curso, ignorando solicitud");
+    return;
+  }
+  cicloCorriendo = true;
   console.log("🔄 Iniciando ciclo de actualización...");
   try {
     const titulares = await recogerNoticias();
@@ -309,6 +316,8 @@ async function cicloActualizacion() {
     }
   } catch (e) {
     console.error("❌ Error en ciclo:", e.message);
+  } finally {
+    cicloCorriendo = false;
   }
 }
 
