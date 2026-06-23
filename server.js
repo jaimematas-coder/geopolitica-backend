@@ -68,7 +68,14 @@ async function saveTracker(tracker) {
 }
 
 function generarIdNoticia(titular) {
-  return titular.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+  // Normaliza eliminando palabras comunes y quedándose con las palabras clave
+  return titular.toLowerCase()
+    .replace(/[áàä]/g, "a").replace(/[éèë]/g, "e").replace(/[íìï]/g, "i")
+    .replace(/[óòö]/g, "o").replace(/[úùü]/g, "u")
+    .replace(/\b(el|la|los|las|un|una|de|del|en|con|por|que|se|al|y|a|su|sus|es|son|ha|han|para|sobre|tras|ante|como|pero|mas|sin|entre|desde|hasta|cuando|donde|si|no|le|les|lo|este|esta|estos|estas|ese|esa|esos|esas|aquel|aquella)\b/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .split("").sort().join("") // orden alfabético para comparar independiente del orden de palabras
+    .slice(0, 35);
 }
 
 function filtrarNoticias24h(noticias) {
