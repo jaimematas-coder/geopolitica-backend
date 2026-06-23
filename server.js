@@ -120,9 +120,10 @@ async function recogerNoticias() {
 // ── Análisis principal ────────────────────────────────────────────────────────
 async function analizarNoticias(titulares) {
   const fecha = new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
-  const resumen = titulares.slice(0, 35).map(t => `- [${t.medio}] ${t.titulo}`).join("\n");
+  const resumen = titulares.slice(0, 20).map(t => `- [${t.medio}] ${t.titulo}`).join("\n");
 
   // 1. Noticias nuevas
+  console.log("🧠 Llamando a Claude para análisis de noticias...");
   const noticiasData = await callClaude(
     "Eres analista geopolítico senior con 15 años de experiencia. Responde ÚNICAMENTE con JSON válido y completo.",
     `Fecha: ${fecha}.\nTitulares:\n${resumen}\n\nSelecciona las 5 más relevantes geopolíticamente:\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve y directo","resumen":"1-2 frases concisas","bullets":["Frase corta máx 10 palabras","Frase corta máx 10 palabras","Frase corta máx 10 palabras"],"analisis":"Una frase larga y densa o dos cortas con perspectiva real: implicaciones, contexto histórico o consecuencias no evidentes. No describir, analizar.","medio":"BBC","link":"https://...","region":"Europa"}]}`
@@ -143,7 +144,8 @@ async function analizarNoticias(titulares) {
   const noticiasFinales = noticiasExistentes.sort((a, b) => b.puntuacion - a.puntuacion);
   await saveNoticias(noticiasFinales);
 
-  const titularesIA = nuevasNoticias.map(n => `- ${n.titular}`).join("\n") || "- Sin noticias";
+  console.log(`📋 ${noticiasArr.length} noticias relevantes seleccionadas`);
+  console.log("🔀 Lanzando análisis paralelo...");
 
   // 3. Tracker
   const trackerExistente = await getTrackerSaved();
@@ -361,4 +363,5 @@ server.on('error', (err) => {
     console.error(`Puerto ${PORT} ocupado, reintentando en 5s...`);
     setTimeout(() => server.listen(PORT), 5000);
   }
+});
 });
