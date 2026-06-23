@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Centro de Inteligencia Geopolítica</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #111827; color: #e5e7eb; min-height: 100vh; }
+    header { background: #1f2937; border-bottom: 1px solid #374151; padding: 12px 16px; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    h1 { font-size: 15px; font-weight: 700; color: white; }
+    .subtitle { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    button { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
+    .btn-gray { background: #374151; color: #d1d5db; }
+    .btn-blue { background: #2563eb; color: white; }
+    .btn-blue:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+    .error-box { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; padding: 8px 12px; border-radius: 6px; font-size: 11px; margin-top: 8px; }
+    nav { background: #1f2937; border-bottom: 1px solid #374151; display: flex; overflow-x: auto; }
+    .nav-btn { padding: 10px 14px; font-size: 12px; color: #9ca3af; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; font-weight: 400; }
+    .nav-btn.active { color: #60a5fa; border-bottom: 2px solid #60a5fa; font-weight: 700; }
+    .badge { background: #374151; color: #9ca3af; border-radius: 9999px; padding: 0 5px; font-size: 10px; }
+    main { padding: 16px; max-width: 800px; margin: 0 auto; }
+    .card { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    .card-blue { border-color: rgba(59,130,246,0.2); }
+    .score { padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .alert { padding: 1px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tag { background: #374151; color: #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 10px; display: inline-block; margin: 2px; }
+    .tag-blue { background: #1e3a5f; color: #93c5fd; }
+    .section-title { color: white; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+    .empty { color: #6b7280; text-align: center; padding: 40px; }
+    .loading { text-align: center; padding: 60px 20px; }
+    .loading p { color: #9ca3af; font-size: 14px; margin-bottom: 6px; }
+    .loading small { color: #6b7280; font-size: 11px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; align-items: center; }
+    .card-title { color: white; font-weight: 600; font-size: 13px; line-height: 1.4; }
+    .toggle-btn { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; flex-shrink: 0; padding: 0; }
+    .card-body { margin-top: 10px; }
+    .card-resumen { color: #d1d5db; font-size: 12px; margin-bottom: 8px; }
+    .bullets { list-style: none; margin-bottom: 8px; }
+    .bullets li { color: #9ca3af; font-size: 12px; display: flex; gap: 6px; margin-bottom: 3px; }
+    .bullets li span { color: #60a5fa; }
+    .analisis-box { background: rgba(37,99,235,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+    .analisis-label { color: #93c5fd; font-size: 11px; font-weight: 700; }
+    .analisis-text { color: #bfdbfe; font-size: 12px; }
+    .link { color: #60a5fa; font-size: 11px; text-decoration: none; }
+    .encuesta-opciones { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .encuesta-meta { color: #9ca3af; font-size: 11px; margin-bottom: 3px; }
+    .update-row { display: flex; gap: 8px; }
+    .update-icon { color: #60a5fa; flex-shrink: 0; }
+    .update-nombre { color: #93c5fd; font-size: 12px; font-weight: 600; }
+    .update-text { color: #d1d5db; font-size: 12px; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+    .label-red { color: #f87171; }
+    .label-blue { color: #60a5fa; margin-top: 10px; }
+    ol.secciones { margin: 0; padding: 0 0 0 16px; }
+    ol.secciones li { color: #9ca3af; font-size: 11px; margin-bottom: 2px; }
+    .diario-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .diario-count { color: #6b7280; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1>🌍 Centro de Inteligencia Geopolítica</h1>
+      <p class="subtitle" id="subtitle">Conectando...</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn-gray" onclick="fetchDatos()">🔄 Refrescar</button>
+      <button class="btn-blue" id="btnForzar" onclick="forzarAnalisis()">⚡ Forzar análisis</button>
+    </div>
+  </div>
+  <div id="errorBox" style="display:none" class="error-box"></div>
+</header>
+
+<nav id="nav"></nav>
+
+<main id="main">
+  <div class="loading">
+    <p>⏳ Conectando con el servidor...</p>
+    <small>La primera carga puede tardar hasta 50 segundos</small>
+  </div>
+</main>
+
+<script>
+  const BACKEND = "https://geopolitica-backend.onrender.com";
+  const SECTIONS = ["Diario","Encuestas","Tracker","Análisis del Mes","Biblioteca"];
+  const ICONS = ["📰","📊","🗺️","📈","📚"];
+  let activeSection = 0;
+  let data = {};
+  let countdown = 1800;
+
+  // Countdown
+  setInterval(() => {
+    countdown = countdown <= 1 ? 1800 : countdown - 1;
+    updateSubtitle();
+  }, 1000);
+
+  function fmtCD(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+
+  function updateSubtitle() {
+    const lu = data.lastUpdate ? new Date(data.lastUpdate).toLocaleTimeString('es-ES') : null;
+    document.getElementById('subtitle').textContent =
+      `🟢 Servidor activo${lu ? ' · Datos de: ' + lu : ''} · Próxima: ${fmtCD(countdown)}`;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.style.display = msg ? 'block' : 'none';
+    el.textContent = msg ? '⚠️ ' + msg : '';
+  }
+
+  async function fetchDatos() {
+    showError('');
+    try {
+      const res = await fetch(BACKEND + '/api/datos');
+      if (!res.ok) throw new Error('Error ' + res.status);
+      data = await res.json();
+      countdown = 1800;
+      updateSubtitle();
+      renderNav();
+      renderSection();
+    } catch(e) {
+      showError('No se pudo conectar: ' + e.message);
+      document.getElementById('subtitle').textContent = '🔴 Servidor sin conexión';
+    }
+  }
+
+  async function forzarAnalisis() {
+    document.getElementById('btnForzar').disabled = true;
+    document.getElementById('btnForzar').textContent = '⏳ Analizando...';
+    try {
+      await fetch(BACKEND + '/api/actualizar', { method: 'POST' });
+      setTimeout(() => {
+        fetchDatos();
+        document.getElementById('btnForzar').disabled = false;
+        document.getElementById('btnForzar').textContent = '⚡ Forzar análisis';
+      }, 4000);
+    } catch(e) {
+      showError('No se pudo forzar la actualización');
+      document.getElementById('btnForzar').disabled = false;
+      document.getElementById('btnForzar').textContent = '⚡ Forzar análisis';
+    }
+  }
+
+  function counts() {
+    const n = data.noticias || [];
+    const e = data.encuestas || [];
+    const t = data.tracker || {};
+    const a = data.analisis || [];
+    const b = data.biblioteca || [];
+    return [
+      n.length, e.length,
+      (t.nuevos_conflictos||[]).length + (t.actualizaciones||[]).length,
+      a.length, b.length
+    ];
+  }
+
+  function renderNav() {
+    const c = counts();
+    document.getElementById('nav').innerHTML = SECTIONS.map((s,i) => `
+      <button class="nav-btn ${i===activeSection?'active':''}" onclick="setSection(${i})">
+        ${ICONS[i]} ${s} ${c[i]>0?`<span class="badge">${c[i]}</span>`:''}
+      </button>`).join('');
+  }
+
+  function setSection(i) { activeSection = i; renderNav(); renderSection(); }
+
+  function scoreStyle(s) {
+    const bg = s>=9?'#7f1d1d':s>=7?'#7c2d12':'#713f12';
+    const col = s>=9?'#fca5a5':s>=7?'#fdba74':'#fde047';
+    return `background:${bg};color:${col}`;
+  }
+
+  function alertStyle(l) {
+    const m = {alto:['#7f1d1d','#fca5a5','ALTO'],medio:['#7c2d12','#fdba74','MEDIO'],bajo:['#713f12','#fde047','BAJO']};
+    const [bg,col,lbl] = m[l]||['#374151','#9ca3af','?'];
+    return `<span class="alert" style="background:${bg};color:${col}">${lbl}</span>`;
+  }
+
+  function renderSection() {
+    const el = document.getElementById('main');
+    if (activeSection === 0) el.innerHTML = renderDiario();
+    else if (activeSection === 1) el.innerHTML = renderEncuestas();
+    else if (activeSection === 2) el.innerHTML = renderTracker();
+    else if (activeSection === 3) el.innerHTML = renderAnalisis();
+    else if (activeSection === 4) el.innerHTML = renderBiblioteca();
+  }
+
+  function renderDiario() {
+    const noticias = [...(data.noticias||[])].sort((a,b)=>b.puntuacion-a.puntuacion);
+    if (!noticias.length) return '<p class="empty">Sin noticias aún. Pulsa Forzar análisis.</p>';
+    return `
+      <div class="diario-header">
+        <p class="section-title">📰 Noticias del Día</p>
+        <span class="diario-count">${noticias.length} noticias · ≥ 6/10</span>
+      </div>
+      ${noticias.map((n,i) => `
+        <div class="card">
+          <div class="card-header">
+            <div style="flex:1">
+              <div class="card-meta">
+                <span class="score" style="${scoreStyle(n.puntuacion)}">${n.puntuacion}/10</span>
+                <span style="font-size:11px;color:#9ca3af">${n.region||''}</span>
+                <span style="font-size:11px;color:#60a5fa">${n.medio||''}</span>
+              </div>
+              <p class="card-title">${n.titular||''}</p>
+            </div>
+            <button class="toggle-btn" onclick="toggleCard('card-${i}')">▼</button>
+          </div>
+          <div id="card-${i}" style="display:none" class="card-body">
+            <p class="card-resumen">${n.resumen||''}</p>
+            <ul class="bullets">${(n.bullets||[]).map(b=>`<li><span>•</span>${b}</li>`).join('')}</ul>
+            <div class="analisis-box">
+              <span class="analisis-label">🧠 Análisis: </span>
+              <span class="analisis-text">${n.analisis||''}</span>
+            </div>
+            <a class="link" href="${n.link||'#'}" target="_blank">🔗 Ver en ${n.medio||'fuente'} →</a>
+          </div>
+        </div>`).join('')}`;
+  }
+
+  function toggleCard(id) {
+    const el = document.getElementById(id);
+    const btn = el.previousElementSibling.querySelector('.toggle-btn');
+    if (el.style.display === 'none') { el.style.display = 'block'; btn.textContent = '▲'; }
+    else { el.style.display = 'none'; btn.textContent = '▼'; }
+  }
+
+  function renderEncuestas() {
+    const enc = data.encuestas || [];
+    if (!enc.length) return '<p class="empty">Sin encuestas aún.</p>';
+    return `<p class="section-title">📊 Propuestas de Encuestas</p>` +
+      enc.map(e => `
+        <div class="card">
+          <p class="card-title" style="margin-bottom:8px">📊 ${e.titulo||''}</p>
+          <div class="encuesta-opciones">${(e.opciones||[]).map(op=>`<span class="tag">${op}</span>`).join('')}</div>
+          <p class="encuesta-meta"><span style="color:#6b7280">Motivo:</span> ${e.motivo||''}</p>
+          <p class="encuesta-meta"><span style="color:#4b5563">Basada en:</span> ${e.basada_en||''}</p>
+        </div>`).join('');
+  }
+
+  function renderTracker() {
+    const t = data.tracker || {};
+    const nc = t.nuevos_conflictos || [];
+    const ac = t.actualizaciones || [];
+    if (!nc.length && !ac.length) return '<p class="empty">Sin datos de tracker aún.</p>';
+    return `<p class="section-title">🗺️ Tracker de Conflictos</p>` +
+      (nc.length ? `<p class="section-label label-red">⚠️ Nuevas tensiones</p>` +
+        nc.map(c => `<div class="card">
+          <div class="card-meta">${alertStyle(c.nivel_alerta)}<span style="font-size:11px;color:#9ca3af">${c.region||''}</span></div>
+          <p class="card-title">${c.nombre||''}</p>
+          <p style="color:#9ca3af;font-size:12px;margin-top:4px">${c.descripcion||''}</p>
+        </div>`).join('') : '') +
+      (ac.length ? `<p class="section-label label-blue">↻ Actualizaciones</p>` +
+        ac.map(u => `<div class="card card-blue">
+          <div class="update-row">
+            <span class="update-icon">↻</span>
+            <div><span class="update-nombre">${u.conflicto||''}: </span><span class="update-text">${u.update||''}</span></div>
+          </div>
+        </div>`).join('') : '');
+  }
+
+  function renderAnalisis() {
+    const ana = data.analisis || [];
+    if (!ana.length) return '<p class="empty">Sin sugerencias aún.</p>';
+    return `<p class="section-title">📈 Análisis del Mes</p>` +
+      ana.map(a => `<div class="card">
+        <p class="card-title">${a.titulo||''}</p>
+        <p style="color:#9ca3af;font-size:11px;margin-bottom:6px">${a.subtitulo||''}</p>
+        <p style="color:#d1d5db;font-size:12px;margin-bottom:6px">${a.descripcion||''}</p>
+        <div style="margin-bottom:6px">${(a.zonas||[]).map(z=>`<span class="tag">${z}</span>`).join('')}</div>
+        <ol class="secciones">${(a.secciones_sugeridas||[]).map(s=>`<li>${s}</li>`).join('')}</ol>
+      </div>`).join('');
+  }
+
+  function renderBiblioteca() {
+    const bib = data.biblioteca || [];
+    if (!bib.length) return '<p class="empty">Sin sugerencias aún.</p>';
+    return `<p class="section-title">📚 Biblioteca</p>` +
+      bib.map(b => `<div class="card">
+        <span class="tag tag-blue">${b.zona||''}</span>
+        <p class="card-title" style="margin:6px 0 2px">${b.titulo||''}</p>
+        <p style="color:#d1d5db;font-size:12px;margin-bottom:4px">${b.descripcion||''}</p>
+        <p style="color:#6b7280;font-size:11px;margin-bottom:6px"><span style="color:#4b5563">Por qué ahora:</span> ${b.motivo||''}</p>
+        <div>${(b.subtemas||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+      </div>`).join('');
+  }
+
+  // Auto-refresh cada 30 min
+  setInterval(fetchDatos, 1800000);
+
+  // Arrancar
+  fetchDatos();
+</script>
+</body>
+</html>
