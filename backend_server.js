@@ -144,7 +144,7 @@ async function cicloActualizacion() {
 }
 
 cicloActualizacion(); // Al arrancar
-setInterval(cicloActualizacion, 10 * 60 * 1000); // Cada 10 min
+setInterval(cicloActualizacion, 30 * 60 * 1000); // Cada 10 min
 
 // ── Endpoints ─────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.json({ status: "ok", lastUpdate: cache.lastUpdate }));
