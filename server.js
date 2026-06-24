@@ -85,24 +85,34 @@ function filtrarNoticias24h(noticias) {
 
 // ── Claude API ────────────────────────────────────────────────────────────────
 async function callClaude(system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  const data = await res.json();
-  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-  const start = text.indexOf("{");
-  let end = text.lastIndexOf("}");
-  while (end > start) {
-    try { return JSON.parse(text.slice(start, end + 1)); } catch { end = text.lastIndexOf("}", end - 1); }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000); // 60s máximo
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system, messages: [{ role: "user", content: user }] }),
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    const start = text.indexOf("{");
+    let end = text.lastIndexOf("}");
+    while (end > start) {
+      try { return JSON.parse(text.slice(start, end + 1)); } catch { end = text.lastIndexOf("}", end - 1); }
+    }
+    throw new Error("No se pudo extraer JSON");
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("Timeout: Claude tardó más de 60 segundos");
+    throw e;
+  } finally {
+    clearTimeout(timeout);
   }
-  throw new Error("No se pudo extraer JSON");
 }
 
 // ── Recoger RSS ───────────────────────────────────────────────────────────────
