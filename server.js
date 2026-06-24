@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const RSSParser = require("rss-parser");
 const fetch = require("node-fetch");
+const axios = require("axios");
 const { Redis } = require("@upstash/redis");
 
 const app = express();
@@ -79,27 +80,27 @@ function filtrarNoticias24h(noticias) {
 }
 
 async function callClaude(system, user) {
-  const timeoutPromise = new Promise(function(_, reject) {
-    setTimeout(function() { reject(new Error("Timeout 60s")); }, 60000);
-  });
-  const fetchPromise = fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
+  const response = await axios.post(
+    "https://api.anthropic.com/v1/messages",
+    {
       model: "claude-sonnet-4-6",
       max_tokens: 4000,
       system: system,
       messages: [{ role: "user", content: user }]
-    }),
-  });
-  const res = await Promise.race([fetchPromise, timeoutPromise]);
-  if (!res.ok) throw new Error("API error " + res.status);
-  const data = await res.json();
-  const text = (data.content || []).filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("");
+    },
+    {
+      timeout: 60000,
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      }
+    }
+  );
+  const text = (response.data.content || [])
+    .filter(function(b) { return b.type === "text"; })
+    .map(function(b) { return b.text; })
+    .join("");
   const start = text.indexOf("{");
   let end = text.lastIndexOf("}");
   while (end > start) {
