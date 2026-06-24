@@ -80,7 +80,7 @@ function filtrarNoticias24h(noticias) {
 
 async function callClaude(system, user) {
   const timeoutPromise = new Promise(function(_, reject) {
-    setTimeout(function() { reject(new Error("Timeout: 60s")); }, 60000);
+    setTimeout(function() { reject(new Error("Timeout 60s")); }, 60000);
   });
   const fetchPromise = fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -147,16 +147,22 @@ async function base44Request(method, endpoint, body) {
 async function sincronizarBase44(noticias, tracker) {
   console.log("Syncing Base44...");
   const hoy = new Date().toISOString().split("T")[0];
+  const ahoraISO = new Date().toISOString();
 
+  // Noticias con puntuacion >= 8, verificando tambien contra Base44
   try {
-    const existentes = await base44Request("GET", "entities/Noticia?limit=50&filters=" + encodeURIComponent(JSON.stringify({ fecha: hoy })));
-    const titularesExistentes = new Set((existentes || []).map(function(n) { return (n.titular || "").toLowerCase().slice(0, 40); }));
+    const hoy = new Date().toISOString().split("T")[0];
+    const existentesB44 = await base44Request("GET", "entities/Noticia?limit=100&filters=" + encodeURIComponent(JSON.stringify({ fecha: hoy })));
+    const titularesB44 = new Set((existentesB44 || []).map(function(n) {
+      return generarIdNoticia(n.titular || "");
+    }));
+
     let publicadas = 0;
     for (let i = 0; i < noticias.length; i++) {
       const n = noticias[i];
       if ((n.puntuacion || 0) < 8) continue;
-      const key = (n.titular || "").toLowerCase().slice(0, 40);
-      if (titularesExistentes.has(key)) continue;
+      const key = generarIdNoticia(n.titular || "");
+      if (titularesB44.has(key)) continue;
       await base44Request("POST", "entities/Noticia", {
         fecha: hoy,
         titular: n.titular || "",
@@ -165,41 +171,81 @@ async function sincronizarBase44(noticias, tracker) {
         criterio: n.analisis || "",
         estado: "publicado",
       });
-      titularesExistentes.add(key);
+      titularesB44.add(key);
       publicadas++;
     }
     console.log("Base44 noticias: " + publicadas + " published");
   } catch (e) { console.error("Base44 noticias error: " + e.message); }
 
+  // Tracker con historial
   try {
     const conflictos = (tracker && tracker.conflictos) || [];
     const existentesConflictos = await base44Request("GET", "entities/Conflicto?limit=100");
-    const nombresExistentes = new Map((existentesConflictos || []).map(function(c) { return [c.nombre ? c.nombre.toLowerCase() : "", c.id]; }));
+    const nombresExistentes = new Map((existentesConflictos || []).map(function(c) {
+      return [(c.nombre || "").toLowerCase(), c.id];
+    }));
     let sincronizados = 0;
+
     for (let i = 0; i < conflictos.length; i++) {
       const c = conflictos[i];
       const key = (c.nombre || "").toLowerCase();
       const nivelMap = { alto: "Alto", medio: "Medio", bajo: "Bajo" };
       const nivel = nivelMap[c.nivel_alerta] || "Medio";
+      const ultimoAcontecimiento = c.ultimos_acontecimientos || c.update || "";
+
       if (nombresExistentes.has(key)) {
-        await base44Request("PUT", "entities/Conflicto/" + nombresExistentes.get(key), {
+        const existingId = nombresExistentes.get(key);
+        let historialActual = [];
+        try {
+          const existing = await base44Request("GET", "entities/Conflicto/" + existingId);
+          historialActual = existing.historial || [];
+        } catch (e) { historialActual = []; }
+
+        if (ultimoAcontecimiento) {
+          historialActual.unshift({ texto: ultimoAcontecimiento, timestamp: ahoraISO });
+          historialActual = historialActual.slice(0, 3);
+        }
+
+        const ubicacionesPrincipal = c.ubicaciones && c.ubicaciones.length > 0 ? c.ubicaciones : null;
+        const updateData = {
           ubicacion: c.ubicacion || "",
           partes: c.partes || "",
           nivel_tension: nivel,
-          resumen_semana: c.ultimos_acontecimientos || c.update || "",
+          resumen_semana: ultimoAcontecimiento,
+          historial: historialActual,
           estado: "activo",
-          actualizado_en: new Date().toISOString(),
-        });
+          actualizado_en: ahoraISO,
+        };
+        if (c.actualizar_resumen && c.nuevo_resumen) {
+          updateData.resumen = c.nuevo_resumen;
+        }
+        if (ubicacionesPrincipal) {
+          updateData.ubicaciones = ubicacionesPrincipal;
+          const principal = ubicacionesPrincipal.find(function(u) { return u.es_principal; }) || ubicacionesPrincipal[0];
+          if (principal) { updateData.pos_x = principal.pos_x; updateData.pos_y = principal.pos_y; }
+        }
+        await base44Request("PUT", "entities/Conflicto/" + existingId, updateData);
       } else {
-        await base44Request("POST", "entities/Conflicto", {
+        const historialInicial = ultimoAcontecimiento
+          ? [{ texto: ultimoAcontecimiento, timestamp: ahoraISO }]
+          : [];
+        const ubicacionesNuevo = c.ubicaciones && c.ubicaciones.length > 0 ? c.ubicaciones : null;
+        const createData = {
           nombre: c.nombre || "",
           ubicacion: c.ubicacion || "",
           partes: c.partes || "",
           nivel_tension: nivel,
-          resumen_semana: c.ultimos_acontecimientos || c.descripcion || "",
+          resumen_semana: ultimoAcontecimiento,
+          historial: historialInicial,
           estado: "activo",
-          actualizado_en: new Date().toISOString(),
-        });
+          actualizado_en: ahoraISO,
+        };
+        if (ubicacionesNuevo) {
+          createData.ubicaciones = ubicacionesNuevo;
+          const principal = ubicacionesNuevo.find(function(u) { return u.es_principal; }) || ubicacionesNuevo[0];
+          if (principal) { createData.pos_x = principal.pos_x; createData.pos_y = principal.pos_y; }
+        }
+        await base44Request("POST", "entities/Conflicto", createData);
         nombresExistentes.set(key, "new");
       }
       sincronizados++;
@@ -235,27 +281,28 @@ async function analizarNoticias(titulares) {
   const noticiasFinales = noticiasExistentes.sort(function(a, b) { return b.puntuacion - a.puntuacion; });
   await saveNoticias(noticiasFinales);
 
-  const titularesIA = noticiasArr.map(function(n) { return "- " + n.titular; }).join("\n") || "- No news";
+  const titularesIA = noticiasArr.map(function(n) { return "- " + n.titular; }).join("\n") || "- Sin noticias";
   const trackerExistente = await getTrackerSaved();
-  const conflictosActuales = (trackerExistente.conflictos || []).map(function(c) { return c.nombre; }).join(", ") || "none";
+  const conflictosExistentesLista = trackerExistente.conflictos || [];
+  const conflictosActuales = conflictosExistentesLista.map(function(c) { return c.nombre; }).join(", ") || "ninguno";
 
   console.log("Running parallel analysis...");
   const results = await Promise.allSettled([
     callClaude(
-      "You are an expert in online communities. Respond ONLY with valid JSON.",
-      "News:\n" + titularesIA + "\n\nGenerate 3 polls:\n{\"encuestas\":[{\"id\":\"e1\",\"titulo\":\"Question\",\"opciones\":[\"A\",\"B\",\"C\"],\"motivo\":\"Reason\",\"basada_en\":\"News\"}]}"
+      "Eres experto en comunidades de divulgacion. Responde UNICAMENTE con JSON valido. Responde en ESPANOL.",
+      "Noticias:\n" + titularesIA + "\n\nGenera 3 encuestas:\n{\"encuestas\":[{\"id\":\"e1\",\"titulo\":\"Pregunta\",\"opciones\":[\"A\",\"B\",\"C\"],\"motivo\":\"Razon\",\"basada_en\":\"Noticia\"}]}"
     ),
     callClaude(
       "Eres analista de conflictos internacionales senior. Responde UNICAMENTE con JSON valido. Responde en ESPANOL.",
-      "Noticias:\n" + titularesIA + "\nConflictos en seguimiento: " + conflictosActuales + "\n\nGenera MAXIMO 3 conflictos nuevos y MAXIMO 5 actualizaciones. Prioriza los mas importantes:\n{\"nuevos_conflictos\":[{\"nombre\":\"Nombre\",\"ubicacion\":\"Pais\",\"partes\":\"Actor A vs Actor B\",\"resumen\":\"2-3 frases\",\"ultimos_acontecimientos\":\"1-2 frases\",\"nivel_alerta\":\"alto\"}],\"actualizaciones\":[{\"conflicto\":\"Nombre exacto\",\"ubicacion\":\"Pais\",\"partes\":\"Actores\",\"ultimos_acontecimientos\":\"Novedad\"}]}"
+      "Noticias de hoy:\n" + titularesIA + "\nConflictos actualmente en seguimiento (" + conflictosExistentesLista.length + "/8): " + conflictosActuales + "\n\nTu tarea es gestionar el tracker de conflictos. REGLAS ESTRICTAS:\n1. El tracker solo contiene CONFLICTOS ESTRUCTURALES de largo plazo: guerras, tensiones militares persistentes, crisis diplomaticas profundas, disputas territoriales cronicas.\n2. NO añadas conflictos por noticias puntuales aunque sean importantes. Una acusacion de la ONU, un fallo informatico, una disputa de peajes, una sentencia judicial NO son conflictos del tracker. Van al Diario.\n3. Si una noticia es una actualizacion de un conflicto ya trackeado, ponla como actualizacion de ese conflicto, no como conflicto nuevo.\n4. Solo propon un conflicto NUEVO si es el inicio de algo estructural y duradero (una guerra, una crisis que durara meses o anos).\n5. Si ya hay 8 conflictos y propones uno nuevo, indica cual sustituirias y por que (el menos relevante a largo plazo).\n6. MAXIMO 8 conflictos en total.\n7. Para cada conflicto incluye el campo ubicaciones: array con todas las zonas afectadas. Cada ubicacion tiene nombre (pais o ciudad especifica si es relevante), es_principal (true solo para la zona principal), pos_x y pos_y (posicion en mapa mundi como porcentaje 0-100, donde x=0 es extremo oeste y x=100 es extremo este, y=0 es norte y y=100 es sur). Ejemplos de referencia: Madrid pos_x=47,pos_y=38; Londres pos_x=48,pos_y=30; Moscu pos_x=59,pos_y=28; Gaza pos_x=57,pos_y=43; Ucrania pos_x=56,pos_y=30; Sudan pos_x=55,pos_y=52; Siria pos_x=58,pos_y=40.\n\n{\"nuevos_conflictos\":[{\"nombre\":\"Nombre del conflicto estructural\",\"ubicacion\":\"Ubicacion principal (texto)\",\"ubicaciones\":[{\"nombre\":\"Ciudad o pais\",\"es_principal\":true,\"pos_x\":55,\"pos_y\":43},{\"nombre\":\"Segunda zona afectada\",\"es_principal\":false,\"pos_x\":48,\"pos_y\":30}],\"partes\":\"Actor A vs Actor B\",\"resumen\":\"2-3 frases explicando el conflicto y su origen historico\",\"ultimos_acontecimientos\":\"1-2 frases con la novedad de hoy si la hay\",\"nivel_alerta\":\"alto\",\"sustituye_a\":\"\"}],\"actualizaciones\":[{\"conflicto\":\"Nombre exacto del conflicto en seguimiento\",\"ubicacion\":\"Ubicacion principal\",\"ubicaciones\":[{\"nombre\":\"Ciudad o pais\",\"es_principal\":true,\"pos_x\":55,\"pos_y\":43}],\"partes\":\"Actores\",\"ultimos_acontecimientos\":\"1-2 frases con la novedad basada en las noticias de hoy\",\"actualizar_resumen\":false,\"nuevo_resumen\":\"\"}]}"
     ),
     callClaude(
-      "You are a geopolitical expert. Respond ONLY with valid JSON.",
-      "News:\n" + titularesIA + "\n\nGenerate 3 analysis topics:\n{\"tematicas\":[{\"id\":\"a1\",\"titulo\":\"Title\",\"subtitulo\":\"Focus\",\"descripcion\":\"Relevance\",\"zonas\":[\"Europe\"],\"secciones_sugeridas\":[\"Sec1\",\"Sec2\",\"Sec3\"]}]}"
+      "Eres experto en divulgacion geopolitica. Responde UNICAMENTE con JSON valido. Responde en ESPANOL.",
+      "Noticias:\n" + titularesIA + "\n\nGenera 3 tematicas para analisis del mes:\n{\"tematicas\":[{\"id\":\"a1\",\"titulo\":\"Titulo\",\"subtitulo\":\"Enfoque\",\"descripcion\":\"Relevancia\",\"zonas\":[\"Europa\"],\"secciones_sugeridas\":[\"Sec1\",\"Sec2\",\"Sec3\"]}]}"
     ),
     callClaude(
-      "You are a geopolitical expert. Respond ONLY with valid JSON.",
-      "News:\n" + titularesIA + "\n\nGenerate 4 library suggestions:\n{\"sugerencias\":[{\"id\":\"b1\",\"zona\":\"Europe\",\"titulo\":\"Title\",\"descripcion\":\"Content\",\"motivo\":\"Why now\",\"subtemas\":[\"sub1\",\"sub2\"]}]}"
+      "Eres experto en divulgacion geopolitica. Responde UNICAMENTE con JSON valido. Responde en ESPANOL.",
+      "Noticias:\n" + titularesIA + "\n\nGenera 4 sugerencias de biblioteca:\n{\"sugerencias\":[{\"id\":\"b1\",\"zona\":\"Europa\",\"titulo\":\"Titulo\",\"descripcion\":\"De que trata\",\"motivo\":\"Por que ahora\",\"subtemas\":[\"sub1\",\"sub2\"]}]}"
     ),
   ]);
 
@@ -267,23 +314,39 @@ async function analizarNoticias(titulares) {
 
   if (trk.status === "fulfilled") {
     const nuevoTracker = trk.value;
-    const conflictosExistentes = trackerExistente.conflictos || [];
+    const conflictosExistentes = conflictosExistentesLista;
     const nombresExistentes = new Set(conflictosExistentes.map(function(c) { return c.nombre.toLowerCase(); }));
     const nuevos = nuevoTracker.nuevos_conflictos || [];
+
     for (let i = 0; i < nuevos.length; i++) {
       const c = nuevos[i];
-      if (conflictosExistentes.length >= 8) break;
+      if (conflictosExistentes.length >= 8) {
+        if (c.sustituye_a) {
+          const idxSustituir = conflictosExistentes.findIndex(function(x) {
+            return x.nombre.toLowerCase() === (c.sustituye_a || "").toLowerCase();
+          });
+          if (idxSustituir !== -1) {
+            console.log("Replacing: " + c.sustituye_a + " -> " + c.nombre);
+            conflictosExistentes.splice(idxSustituir, 1);
+            nombresExistentes.delete(c.sustituye_a.toLowerCase());
+          } else { continue; }
+        } else { continue; }
+      }
       if (!nombresExistentes.has(c.nombre.toLowerCase())) {
         conflictosExistentes.push(Object.assign({}, c, { id: "c" + Date.now(), timestamp: ahora }));
         nombresExistentes.add(c.nombre.toLowerCase());
       }
     }
+
     const actualizaciones = nuevoTracker.actualizaciones || [];
     for (let i = 0; i < actualizaciones.length; i++) {
       const u = actualizaciones[i];
       for (let j = 0; j < conflictosExistentes.length; j++) {
-        if (conflictosExistentes[j].nombre.toLowerCase() === u.conflicto.toLowerCase()) {
-          conflictosExistentes[j] = Object.assign({}, conflictosExistentes[j], u, { nombre: conflictosExistentes[j].nombre, ultimaActualizacion: ahora });
+        if (conflictosExistentes[j].nombre.toLowerCase() === (u.conflicto || "").toLowerCase()) {
+          conflictosExistentes[j] = Object.assign({}, conflictosExistentes[j], u, {
+            nombre: conflictosExistentes[j].nombre,
+            ultimaActualizacion: ahora
+          });
           break;
         }
       }
