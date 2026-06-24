@@ -367,14 +367,20 @@ async function analizarNoticias(titulares) {
 }
 
 let cache = { noticias: [], encuestas: [], tracker: { conflictos: [] }, analisis: [], biblioteca: [], lastUpdate: null };
-let cicloCorriendo = false;
 
 async function cicloActualizacion() {
-  if (cicloCorriendo) {
-    console.log("Cycle already running, skipping");
-    return;
+  try {
+    const bloqueado = await redis.get("ciclo_lock");
+    if (bloqueado) {
+      console.log("Cycle already running, skipping");
+      return;
+    }
+    await redis.set("ciclo_lock", "1");
+    await redis.expire("ciclo_lock", 300); // expira en 5 min por si acaso
+  } catch (e) {
+    console.warn("Could not set lock, proceeding anyway: " + e.message);
   }
-  cicloCorriendo = true;
+
   console.log("Starting update cycle...");
   try {
     const titulares = await recogerNoticias();
@@ -387,7 +393,7 @@ async function cicloActualizacion() {
   } catch (e) {
     console.error("Cycle error: " + e.message);
   } finally {
-    cicloCorriendo = false;
+    try { await redis.del("ciclo_lock"); } catch (e) {}
   }
 }
 
