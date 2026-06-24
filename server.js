@@ -40,7 +40,7 @@ const RSS_FEEDS = [
   { name: "Asia Times",             url: "https://asiatimes.com/feed/" },
 ];
 
-// ── Helpers Redis ─────────────────────────────────────────────────────────────
+// ── Redis helpers ─────────────────────────────────────────────────────────────
 async function getNoticiasSaved() {
   try {
     const data = await redis.get("noticias");
@@ -49,9 +49,8 @@ async function getNoticiasSaved() {
 }
 
 async function saveNoticias(noticias) {
-  try {
-    await redis.set("noticias", JSON.stringify(noticias));
-  } catch (e) { console.error("Error guardando noticias:", e.message); }
+  try { await redis.set("noticias", JSON.stringify(noticias)); }
+  catch (e) { console.error("Error guardando noticias:", e.message); }
 }
 
 async function getTrackerSaved() {
@@ -62,19 +61,17 @@ async function getTrackerSaved() {
 }
 
 async function saveTracker(tracker) {
-  try {
-    await redis.set("tracker", JSON.stringify(tracker));
-  } catch (e) { console.error("Error guardando tracker:", e.message); }
+  try { await redis.set("tracker", JSON.stringify(tracker)); }
+  catch (e) { console.error("Error guardando tracker:", e.message); }
 }
 
 function generarIdNoticia(titular) {
-  // Normaliza eliminando palabras comunes y quedándose con las palabras clave
   return titular.toLowerCase()
-    .replace(/[áàä]/g, "a").replace(/[éèë]/g, "e").replace(/[íìï]/g, "i")
-    .replace(/[óòö]/g, "o").replace(/[úùü]/g, "u")
-    .replace(/\b(el|la|los|las|un|una|de|del|en|con|por|que|se|al|y|a|su|sus|es|son|ha|han|para|sobre|tras|ante|como|pero|mas|sin|entre|desde|hasta|cuando|donde|si|no|le|les|lo|este|esta|estos|estas|ese|esa|esos|esas|aquel|aquella)\b/g, "")
+    .replace(/[áàä]/g, "a").replace(/[éèë]/g, "e")
+    .replace(/[íìï]/g, "i").replace(/[óòö]/g, "o").replace(/[úùü]/g, "u")
+    .replace(/\b(el|la|los|las|un|una|de|del|en|con|por|que|se|al|y|a|su|sus|es|son|ha|han|para|sobre|tras|ante|como|pero|sin|entre|desde|hasta|no|le|les|lo|este|esta|ese|esa)\b/g, "")
     .replace(/[^a-z0-9]/g, "")
-    .split("").sort().join("") // orden alfabético para comparar independiente del orden de palabras
+    .split("").sort().join("")
     .slice(0, 35);
 }
 
@@ -86,7 +83,7 @@ function filtrarNoticias24h(noticias) {
 // ── Claude API ────────────────────────────────────────────────────────────────
 async function callClaude(system, user) {
   const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("Timeout: Claude tardó más de 60 segundos")), 60000)
+    setTimeout(() => reject(new Error("Timeout: Claude tardó más de 60s")), 60000)
   );
   const fetchPromise = fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -95,8 +92,14 @@ async function callClaude(system, user) {
       "x-api-key": process.env.ANTHROPIC_API_KEY,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system, messages: [{ role: "user", content: user }] }),
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
+      system,
+      messages: [{ role: "user", content: user }]
+    }),
   });
+
   const res = await Promise.race([fetchPromise, timeoutPromise]);
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
@@ -104,12 +107,13 @@ async function callClaude(system, user) {
   const start = text.indexOf("{");
   let end = text.lastIndexOf("}");
   while (end > start) {
-    try { return JSON.parse(text.slice(start, end + 1)); } catch { end = text.lastIndexOf("}", end - 1); }
+    try { return JSON.parse(text.slice(start, end + 1)); }
+    catch { end = text.lastIndexOf("}", end - 1); }
   }
   throw new Error("No se pudo extraer JSON");
 }
 
-// ── Recoger RSS ───────────────────────────────────────────────────────────────
+// ── RSS ───────────────────────────────────────────────────────────────────────
 async function recogerNoticias() {
   const titulares = [];
   for (const feed of RSS_FEEDS) {
@@ -128,8 +132,7 @@ const BASE44_APP_ID = "6a35db462179dc4b254ff6fb";
 const BASE44_API = "https://app.base44.com/api/apps";
 
 async function base44Request(method, endpoint, body) {
-  const url = `${BASE44_API}/${BASE44_APP_ID}/${endpoint}`;
-  const res = await fetch(url, {
+  const res = await fetch(`${BASE44_API}/${BASE44_APP_ID}/${endpoint}`, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -148,9 +151,8 @@ async function sincronizarBase44(noticias, tracker) {
   console.log("📤 Sincronizando con Base44...");
   const hoy = new Date().toISOString().split("T")[0];
 
-  // 1. Noticias con puntuación >= 8
   try {
-    const existentes = await base44Request("GET", `entities/Noticia?limit=50&filters=${encodeURIComponent(JSON.stringify({fecha: hoy}))}`);
+    const existentes = await base44Request("GET", `entities/Noticia?limit=50&filters=${encodeURIComponent(JSON.stringify({ fecha: hoy }))}`);
     const titularesExistentes = new Set((existentes || []).map(n => n.titular?.toLowerCase().slice(0, 40)));
     let publicadas = 0;
     for (const n of noticias) {
@@ -173,7 +175,6 @@ async function sincronizarBase44(noticias, tracker) {
     console.error("❌ Error sincronizando noticias Base44:", e.message);
   }
 
-  // 2. Conflictos del tracker
   try {
     const conflictos = (tracker && tracker.conflictos) || [];
     const existentesConflictos = await base44Request("GET", "entities/Conflicto?limit=100");
@@ -212,7 +213,7 @@ async function sincronizarBase44(noticias, tracker) {
   }
 }
 
-// ── Análisis principal ────────────────────────────────────────────────────────
+// ── Análisis ──────────────────────────────────────────────────────────────────
 async function analizarNoticias(titulares) {
   const fecha = new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
   const resumen = titulares.slice(0, 20).map(t => `- [${t.medio}] ${t.titulo}`).join("\n");
@@ -220,13 +221,12 @@ async function analizarNoticias(titulares) {
   console.log("🧠 Llamando a Claude para análisis de noticias...");
   const noticiasData = await callClaude(
     "Eres analista geopolítico senior con 15 años de experiencia. Responde ÚNICAMENTE con JSON válido y completo.",
-    `Fecha: ${fecha}.\nTitulares:\n${resumen}\n\nAnaliza estos titulares y selecciona las 5 noticias más relevantes geopolíticamente. IMPORTANTE: si varios titulares tratan el mismo acontecimiento aunque vengan de distintos medios, cuéntalos como UNA SOLA noticia y usa el medio más relevante. No repitas temas.\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve y directo","resumen":"1-2 frases concisas","bullets":["Frase corta máx 10 palabras","Frase corta máx 10 palabras","Frase corta máx 10 palabras"],"analisis":"Una frase larga y densa o dos cortas con perspectiva real: implicaciones, contexto histórico o consecuencias no evidentes. No describir, analizar.","medio":"BBC","link":"https://...","region":"Europa"}]}`
+    `Fecha: ${fecha}.\nTitulares:\n${resumen}\n\nAnaliza y selecciona las 5 noticias más relevantes geopolíticamente. Si varios titulares tratan el mismo acontecimiento aunque vengan de distintos medios, cuéntalos como UNA SOLA noticia. No repitas temas.\n{"noticias":[{"id":"n1","puntuacion":8,"titular":"Titular breve","resumen":"1-2 frases","bullets":["Frase corta máx 10 palabras","Frase corta máx 10 palabras","Frase corta máx 10 palabras"],"analisis":"Una frase larga o dos cortas con perspectiva real.","medio":"BBC","link":"https://...","region":"Europa"}]}`
   );
 
   const noticiasArr = (noticiasData.noticias || []).filter(n => n.puntuacion >= 6);
   console.log(`📋 ${noticiasArr.length} noticias relevantes seleccionadas`);
 
-  // Merge con existentes sin duplicados
   const noticiasExistentes = filtrarNoticias24h(await getNoticiasSaved());
   const idsExistentes = new Set(noticiasExistentes.map(n => generarIdNoticia(n.titular)));
   const ahora = Date.now();
@@ -252,7 +252,7 @@ async function analizarNoticias(titulares) {
     ),
     callClaude(
       "Eres analista de conflictos internacionales senior. Responde ÚNICAMENTE con JSON válido.",
-      `Noticias:\n${titularesIA}\nConflictos ya en seguimiento: ${conflictosActuales}\n\nGenera tracker:\n{"nuevos_conflictos":[{"nombre":"Nombre","ubicacion":"País","partes":"Actor A vs Actor B","resumen":"2-3 frases","ultimos_acontecimientos":"1-2 frases","nivel_alerta":"alto"}],"actualizaciones":[{"conflicto":"Nombre exacto","ubicacion":"País","partes":"Actores","ultimos_acontecimientos":"Novedad"}]}`
+      `Noticias:\n${titularesIA}\nConflictos en seguimiento: ${conflictosActuales}\n\nGenera tracker:\n{"nuevos_conflictos":[{"nombre":"Nombre","ubicacion":"País","partes":"Actor A vs Actor B","resumen":"2-3 frases","ultimos_acontecimientos":"1-2 frases","nivel_alerta":"alto"}],"actualizaciones":[{"conflicto":"Nombre exacto","ubicacion":"País","partes":"Actores","ultimos_acontecimientos":"Novedad"}]}`
     ),
     callClaude(
       "Eres experto en divulgación geopolítica. Responde ÚNICAMENTE con JSON válido.",
@@ -264,9 +264,8 @@ async function analizarNoticias(titulares) {
     ),
   ]);
 
-  console.log(`📊 Encuestas: ${enc.status} | Tracker: ${trk.status} | Análisis: ${ana.status} | Biblioteca: ${bib.status}`);
+  console.log(`📊 Enc:${enc.status} Trk:${trk.status} Ana:${ana.status} Bib:${bib.status}`);
 
-  // Merge tracker
   if (trk.status === "fulfilled") {
     const nuevoTracker = trk.value;
     const conflictosExistentes = trackerExistente.conflictos || [];
@@ -300,12 +299,11 @@ async function analizarNoticias(titulares) {
 
 // ── Cache ─────────────────────────────────────────────────────────────────────
 let cache = { noticias: [], encuestas: [], tracker: { conflictos: [] }, analisis: [], biblioteca: [], lastUpdate: null };
-
 let cicloCorriendo = false;
 
 async function cicloActualizacion() {
   if (cicloCorriendo) {
-    console.log("⏸ Ciclo ya en curso, ignorando solicitud");
+    console.log("⏸ Ciclo ya en curso, ignorando");
     return;
   }
   cicloCorriendo = true;
@@ -338,10 +336,12 @@ setInterval(cicloActualizacion, 30 * 60 * 1000);
 // ── Endpoints ─────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.json({ status: "ok", lastUpdate: cache.lastUpdate }));
 app.get("/api/datos", (req, res) => res.json(cache));
+
 app.post("/api/actualizar", async (req, res) => {
   cicloActualizacion();
   res.json({ message: "Actualización iniciada" });
 });
+
 app.delete("/api/noticias/:id", async (req, res) => {
   const { id } = req.params;
   const noticias = await getNoticiasSaved();
@@ -350,6 +350,7 @@ app.delete("/api/noticias/:id", async (req, res) => {
   cache.noticias = nuevas;
   res.json({ message: "Noticia eliminada", total: nuevas.length });
 });
+
 app.delete("/api/tracker/:nombre", async (req, res) => {
   const nombre = decodeURIComponent(req.params.nombre);
   const tracker = await getTrackerSaved();
