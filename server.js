@@ -214,8 +214,8 @@ async function analizarNoticias(titulares) {
 
   console.log("Calling Claude for news analysis...");
   const noticiasData = await callClaude(
-    "You are a senior geopolitical analyst. Respond ONLY with valid complete JSON. No markdown.",
-    "Date: " + fecha + ".\nHeadlines:\n" + resumen + "\n\nSelect the 5 most geopolitically relevant news. If multiple headlines cover the same event from different sources, count them as ONE story.\n{\"noticias\":[{\"id\":\"n1\",\"puntuacion\":8,\"titular\":\"Brief headline\",\"resumen\":\"1-2 sentences\",\"bullets\":[\"Short point max 10 words\",\"Short point max 10 words\",\"Short point max 10 words\"],\"analisis\":\"One dense analytical sentence with real perspective.\",\"medio\":\"BBC\",\"link\":\"https://...\",\"region\":\"Europe\"}]}"
+    "Eres analista geopolitico senior con 15 anos de experiencia. Responde UNICAMENTE con JSON valido y completo. Sin markdown.",
+    "Fecha: " + fecha + ".\nTitulares:\n" + resumen + "\n\nAnaliza y selecciona las 5 noticias mas relevantes geopoliticamente. Si varios titulares tratan el mismo acontecimiento aunque vengan de distintos medios, cuentalos como UNA SOLA noticia. No repitas temas. Responde en ESPANOL.\n{\"noticias\":[{\"id\":\"n1\",\"puntuacion\":8,\"titular\":\"Titular breve\",\"resumen\":\"1-2 frases\",\"bullets\":[\"Frase corta max 10 palabras\",\"Frase corta max 10 palabras\",\"Frase corta max 10 palabras\"],\"analisis\":\"Una frase larga y densa con perspectiva real: implicaciones o consecuencias no evidentes.\",\"medio\":\"BBC\",\"link\":\"https://...\",\"region\":\"Europa\"}]}"
   );
 
   const noticiasArr = (noticiasData.noticias || []).filter(function(n) { return n.puntuacion >= 6; });
@@ -246,8 +246,8 @@ async function analizarNoticias(titulares) {
       "News:\n" + titularesIA + "\n\nGenerate 3 polls:\n{\"encuestas\":[{\"id\":\"e1\",\"titulo\":\"Question\",\"opciones\":[\"A\",\"B\",\"C\"],\"motivo\":\"Reason\",\"basada_en\":\"News\"}]}"
     ),
     callClaude(
-      "You are a senior international conflicts analyst. Respond ONLY with valid JSON.",
-      "News:\n" + titularesIA + "\nTracked conflicts: " + conflictosActuales + "\n\nGenerate tracker:\n{\"nuevos_conflictos\":[{\"nombre\":\"Name\",\"ubicacion\":\"Country\",\"partes\":\"Actor A vs Actor B\",\"resumen\":\"2-3 sentences\",\"ultimos_acontecimientos\":\"1-2 sentences\",\"nivel_alerta\":\"alto\"}],\"actualizaciones\":[{\"conflicto\":\"Exact name\",\"ubicacion\":\"Country\",\"partes\":\"Actors\",\"ultimos_acontecimientos\":\"Update\"}]}"
+      "Eres analista de conflictos internacionales senior. Responde UNICAMENTE con JSON valido. Responde en ESPANOL.",
+      "Noticias:\n" + titularesIA + "\nConflictos en seguimiento: " + conflictosActuales + "\n\nGenera MAXIMO 3 conflictos nuevos y MAXIMO 5 actualizaciones. Prioriza los mas importantes:\n{\"nuevos_conflictos\":[{\"nombre\":\"Nombre\",\"ubicacion\":\"Pais\",\"partes\":\"Actor A vs Actor B\",\"resumen\":\"2-3 frases\",\"ultimos_acontecimientos\":\"1-2 frases\",\"nivel_alerta\":\"alto\"}],\"actualizaciones\":[{\"conflicto\":\"Nombre exacto\",\"ubicacion\":\"Pais\",\"partes\":\"Actores\",\"ultimos_acontecimientos\":\"Novedad\"}]}"
     ),
     callClaude(
       "You are a geopolitical expert. Respond ONLY with valid JSON.",
@@ -272,6 +272,7 @@ async function analizarNoticias(titulares) {
     const nuevos = nuevoTracker.nuevos_conflictos || [];
     for (let i = 0; i < nuevos.length; i++) {
       const c = nuevos[i];
+      if (conflictosExistentes.length >= 8) break;
       if (!nombresExistentes.has(c.nombre.toLowerCase())) {
         conflictosExistentes.push(Object.assign({}, c, { id: "c" + Date.now(), timestamp: ahora }));
         nombresExistentes.add(c.nombre.toLowerCase());
